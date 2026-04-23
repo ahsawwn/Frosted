@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                  String     @id @default(ulid())
+  username            String     @unique
+  email               String     @unique
+  password            String
+  name                String?
+  role                String     @default("USER")
+  failedAttempts      Int        @default(0)
+  isLocked            Boolean    @default(false)
+  lockoutUntil        DateTime?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  needsPasswordChange Boolean    @default(true)
+  tokenVersion        Int        @default(1)
+  AuditLog            AuditLog[]
+  sessions            Session[]
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  entity    String
+  details   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Ingredient {
+  id                String       @id @default(uuid())
+  name              String       @unique
+  unit              String // e.g., "grams", "liters"
+  stock             Float        @default(0) // Current stock level
+  lowStockThreshold Float        @default(5) // Threshold for low stock alerts
+  unitsPerPack      Int          @default(0) //  Number of units in a pack (if applicable)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  recipeItems       RecipeItem[]
+}
+
+model Product {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  description String?
+  price       Float
+  categoryId  String
+  category    Category     @relation(fields: [categoryId], references: [id])
+  imageUrl    String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  ingredients RecipeItem[]
+  orderItems  OrderItem[]
+}
+
+model RecipeItem {
+  id           String     @id @default(uuid())
+  productId    String
+  ingredientId String
+  quantity     Float
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  product      Product    @relation(fields: [productId], references: [id])
+}
+
+model StoreSettings {
+  id           Int     @id @default(1)
+  storeName    String  @default("Oftsy Ice Cream")
+  themeColor   String  @default("#2563eb")
+  currency     String  @default("PKR")
+  isTaxEnabled Boolean @default(true)
+}
+
+model Order {
+  id            String      @id @default(uuid())
+  totalAmount   Float
+  subtotal      Float
+  taxAmount     Float
+  paymentMethod String
+  status        String      @default("COMPLETED")
+  createdAt     DateTime    @default(now())
+  items         OrderItem[]
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+  order     Order   @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPERADMIN
+}

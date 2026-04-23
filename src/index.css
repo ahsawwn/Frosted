@@ -1,0 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import "tailwindcss";
+
+
+@theme {
+  /* Design Tokens */
+  --font-family: 'Inter', sans-serif;
+  --color-brand: var(--brand);
+  --color-panel: var(--panel);
+  --color-surface: var(--surface);
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-border-oftsy: var(--border-oftsy);
+  
+  --radius-oftsy: 2.5rem;
+  --shadow-oftsy: 0 10px 30px -10px var(--shadow-color);
+}
+
+/* --- THEME DEFINITIONS --- */
+
+:root, .light {
+  --brand: #db2777; /* Pink 600 */
+  --panel: #f8fafc; /* Slate 50 */
+  --surface: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-oftsy: #e2e8f0;
+  --shadow-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark {
+  --brand: #f472b6; /* Pink 400 */
+  --panel: #020617; /* Navy 950 */
+  --surface: #0f172a; /* Navy 900 */
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-oftsy: #1e293b;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+.emerald-enterprise {
+  --brand: #10b981; /* Emerald 500 */
+  --panel: #f0fdf4; /* Green 50 */
+  --surface: #ffffff;
+  --text-main: #064e3b;
+  --text-muted: #34d399;
+  --border-oftsy: #dcfce7;
+  --shadow-color: rgba(16, 185, 129, 0.1);
+}
+
+.midnight-gold {
+  --brand: #fbbf24; /* Amber 400 */
+  --panel: #111111;
+  --surface: #1a1a1a;
+  --text-main: #ffffff;
+  --text-muted: #71717a;
+  --border-oftsy: #27272a;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+}
+
+.ocean-pro {
+  --brand: #0ea5e9; /* Sky 500 */
+  --panel: #f0f9ff;
+  --surface: #ffffff;
+  --text-main: #0c4a6e;
+  --text-muted: #7dd3fc;
+  --border-oftsy: #e0f2fe;
+  --shadow-color: rgba(14, 165, 233, 0.1);
+}
