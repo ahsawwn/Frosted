@@ -32,15 +32,74 @@ Unlike standard web printing, Frosted includes a specialized **Thermal Graphics 
 
 ---
 
-## 🛠 Functional Documentation
+## 🗺 System Modules & Orchestration
 
-### **POS Terminal Intelligence**
-* **Atomic Cart Engine:** A memoized state-driven order engine capable of handling complex modifiers and discounts with sub-100ms calculation latency.
-* **Session Persistence:** State is synchronized with `localStorage` to ensure zero data loss during power fluctuations or accidental terminal resets.
+Frosted is divided into specialized operational nodes, each engineered for a specific role within the enterprise.
 
-### **Warehouse & Supply Chain Logic**
-* **Critical Stock Pulse:** Automated monitoring that triggers visual pulse animations when key ingredients (Milk, Flour, Sugar) fall below safety thresholds.
-* **Multi-Unit Scaling:** Support for complex bakery conversions (Liters to Milliliters, Kilograms to Grams) with real-time stock patching.
+### **1. Management Intelligence (Dashboard)**
+The nerve center of the ecosystem, providing real-time telemetry into store health.
+* **Metric Pulses:** Instant visibility into Sales Today, Order Volume, and Stock Alerts.
+* **Stream Analytics:** A live terminal feed of the latest transactions.
+* **Role-Awareness:** Automatically filters KPIs based on whether an Admin, Manager, or Chef is logged in.
+
+### **2. Sales Terminal (POS)**
+A high-velocity transaction interface built for zero-latency checkout.
+* **Atomic Cart:** Sub-100ms calculation of taxes, discounts, and custom modifiers.
+* **Fiscal Logic:** Intelligent tax mapping (5% Card / 15% Cash) based on payment terminal selection.
+* **Voucher Integration:** One-click redemption of marketing coupons and loyalty vouchers.
+
+### **3. Kitchen Display (KDS)**
+Digital order orchestration that replaces volatile paper tickets.
+* **Status Lifecycle:** High-contrast tracking through `PENDING`, `PREPARING`, and `READY` phases.
+* **Lead Time Logic:** Displays preparation requirements to help chefs prioritize bottleneck items.
+* **Phase Mutation:** Simple, touch-optimized "Next Phase" controls for fast-paced kitchen work.
+
+### **4. Warehouse & Logistics (Inventory)**
+Real-time monitoring of raw materials and bakery essentials.
+* **Threshold Alerts:** Visual pulse animations for items falling below safety stock levels.
+* **Movement History:** Historical logs of every stock addition or deduction.
+* **Inventory Pulse:** Quick-glance indicators of overall warehouse health.
+
+### **5. Production Logic (Recipes/BOM)**
+The Bill of Materials (BOM) engine that links products to their raw ingredients.
+* **Composition Protocol:** Define exactly how much milk, sugar, or flour goes into every scoop or cake.
+* **Multi-Unit Scaling:** Automated conversion between bulk (Kgs/Ltrs) and production units (Gms/Mls).
+* **Costing Awareness:** Pre-calculates production requirements for high-volume orders.
+
+### **6. Catalog & Merchandising (Products)**
+A centralized repository for all items sold at the front counter.
+* **Categorization:** Logical grouping (e.g., Ice Creams, Toppings, Beverages) for fast POS navigation.
+* **Identity Provisioning:** Manage pricing, imagery, and category assignments from a single terminal.
+* **Prep-Time Metadata:** Set specific lead times for every product to feed the KDS engine.
+
+### **7. Fiscal Audit (Transactions)**
+Comprehensive historical ledger for financial transparency.
+* **Legacy Search:** Instantly locate orders by ID or date for refunds and disputes.
+* **Thermal Reprinting:** Generate "DUPLICATE" watermarked receipts for historical orders.
+* **Status Audit:** Track the final financial and fulfillment status of every transaction.
+
+### **8. Customer Relations (CRM)**
+Identity management and loyalty orchestration.
+* **Loyalty Ledger:** Track point balances and reward thresholds for every customer.
+* **Identity Shard:** Maintain contact details and purchase history for personalized service.
+* **Walk-In Support:** Seamless handling of anonymous transactions without data overhead.
+
+### **9. Personnel & Access (Staff)**
+Human Resource management with hardware-level security.
+* **Role Provisioning:** Assign staff to `SUPERADMIN`, `ADMIN`, `CASHIER`, or `KITCHEN` tiers.
+* **Access Control:** Enforce UI-level filtering to prevent unauthorized data access.
+* **Operator Pulse:** View currently active staff nodes on the secure terminal.
+
+### **10. Marketing Hub (Coupons)**
+Dynamic campaign management for store promotions.
+* **Rule Engine:** Set expiry dates, usage limits, and minimum order requirements.
+* **Redemption Tracking:** See exactly how many times a voucher has been used in production.
+
+### **11. System Engine (Settings)**
+Global configuration and branding controls.
+* **Receipt Customization:** Live preview of thermal fonts, sizes, and branding headers.
+* **Theme Identity:** Instantly swap the entire UI between 5 professional color skins.
+* **Hardware Toggles:** Activate "Kiosk Mode" or "Auto-Print" protocols for specific terminals.
 
 ---
 
@@ -49,11 +108,11 @@ Unlike standard web printing, Frosted includes a specialized **Thermal Graphics 
 | Layer | Technology / Pattern |
 | :--- | :--- |
 | **Frontend** | React 18, TypeScript (Strict Mode) |
+| **Database** | Prisma ORM, PostgreSQL (Singleton Logic) |
 | **Styling** | Tailwind CSS v4 (Oxygen Engine) |
-| **State** | Context API (Themes/Auth), LocalState (POS Logic) |
-| **Icons** | Lucide React (Optimized Vectors) |
-| **Export** | react-to-print, jsPDF, html2canvas |
-| **Architecture** | Modular ERP Viewport Pattern |
+| **State** | Context API (Themes/Auth), LocalStorage (Persistence) |
+| **API** | Express.js REST Framework |
+| **Printing** | Specialized Thermal Rasterization (72mm) |
 
 ---
 
@@ -62,22 +121,20 @@ Unlike standard web printing, Frosted includes a specialized **Thermal Graphics 
 ```text
 Frosted/
 ├── src/
-│   ├── context/      # Global Identity & Identity Management
-│   ├── modules/      # POS, Warehouse, Staff, & CRM Logic
-│   ├── layouts/      # 1080p Viewport Skeleton & Navigation
-│   ├── services/     # Printing Engine & PDF Generation
-│   ├── hooks/        # Custom Hardware & Theme Interaction Hooks
-│   └── styles/       # Tailwind 4 CSS Variables & Design Tokens
+│   ├── components/   # Atomic UI & Receipt Templates
+│   ├── pages/        # Business Logic Shards (POS, KDS, HR)
+│   ├── routes/       # API Gateway & Backend Logic
+│   ├── lib/          # Prisma & Database Connectors
+│   └── styles/       # Tailwind Design Tokens
 ```
+
 ---
 
 ## 🛡 Security & Reliability
 
-* **Administrative Guardrails:** High-level security alerts required for all transaction reversals or stock deletions.
-
-* **Input Sanitization:** All fiscal and inventory inputs are strictly parsed to prevent database inconsistencies.
-
-* **Theme Pre-fetching:** Prevents "Style Flashing" by applying CSS variables before the initial React mount.
+* **Session Persistence:** State is synchronized with `localStorage` and Backend DB to ensure zero data loss during power fluctuations.
+* **Input Sanitization:** All fiscal and inventory inputs are strictly parsed at the schema level.
+* **Thermal Accuracy:** CSS-first print strategy ensures perfect scaling on 72mm hardware without driver overhead.
 
 ---
 
@@ -87,6 +144,5 @@ Frosted/
 
 I am a Full-Stack Developer and Entrepreneur dedicated to building high-performance, business-centric software solutions that bridge the gap between complex data and intuitive design.
 
-
 ---
-**©** 2026 Frosted (SMC-Private) Limited. Built by **ahsawwn**.
+**©** 2026 Frosted (SMC-Private) Limited. Built by **ahsawwn**. 🚀🏁🧤
