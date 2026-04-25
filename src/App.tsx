@@ -11,6 +11,11 @@ import Recipes from './pages/Recipes';
 import Staff from './pages/Staff';
 import Settings from './pages/Settings';
 import { ThemeProvider } from './context/ThemeContext';
+import ProductView from './pages/ProductView';
+import Customers from './pages/Customers';
+import Coupons from './pages/Coupons';
+import Kitchen from './pages/Kitchen';
+import CustomerScreen from './pages/CustomerScreen';
 
 function App() {
   const isAuthenticated = !!localStorage.getItem('token');
@@ -26,6 +31,9 @@ function App() {
           element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} 
         />
 
+        {/* Customer Facing - Public but dedicated */}
+        <Route path="/customer-screen" element={<CustomerScreen />} />
+
         {/* Protected Dashboard Shell */}
         {isAuthenticated ? (
           <Route element={<DashboardLayout />}>
@@ -34,18 +42,21 @@ function App() {
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/transactions" element={<Transactions />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/products/:id" element={<ProductView />} />
             <Route path="/recipes" element={<Recipes />} />
             <Route path="/staff" element={<Staff />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/customers" element={<Customers />} />
+            <Route path="/coupons" element={<Coupons />} />
+            <Route path="/kitchen" element={<Kitchen />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
           </Route>
         ) : (
-          /* Fallback: If no token and trying to access dashboard, go to login */
           <Route path="*" element={<Navigate to="/login" replace />} />
         )}
 
         {/* Catch-all */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
       </Routes>
       </ThemeProvider>
     </>

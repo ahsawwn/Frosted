@@ -1,314 +1,250 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
-  Package, AlertTriangle, Search, Loader2, 
-  Plus, Edit3, Trash2, X, ArrowDown
+  Plus, Search, 
+  Boxes, X, 
+  Trash2, Edit3
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 interface Ingredient {
   id: string;
   name: string;
-  unit: string;
   stock: number;
+  unit: any;
+  unitId: string;
   lowStockThreshold: number;
 }
 
 const Inventory = () => {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [units, setUnits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [editingIng, setEditingIng] = useState<Ingredient | null>(null);
+
   const [formData, setFormData] = useState({
     name: '',
-    unit: '',
     stock: 0,
-    lowStockThreshold: 5
+    unitId: '',
+    lowStockThreshold: 10
   });
 
-  useEffect(() => {
-    fetchIngredients();
-  }, []);
-
-  const fetchIngredients = async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('http://localhost:3000/api/ingredients');
-      setIngredients(res.data);
+      const [ingRes, unitRes] = await Promise.all([
+        axios.get('http://localhost:3000/api/ingredients'),
+        axios.get('http://localhost:3000/api/units')
+      ]);
+      setIngredients(ingRes.data);
+      setUnits(unitRes.data);
     } catch (err) {
-      toast.error("Could not load inventory");
+      toast.error("Failed to sync inventory data");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOpenModal = (ing: Ingredient | null = null) => {
-    if (ing) {
-      setEditingIng(ing);
-      setFormData({
-        name: ing.name,
-        unit: ing.unit,
-        stock: ing.stock,
-        lowStockThreshold: ing.lowStockThreshold
-      });
-    } else {
-      setEditingIng(null);
-      setFormData({ name: '', unit: '', stock: 0, lowStockThreshold: 5 });
-    }
-    setIsModalOpen(true);
-  };
+  useEffect(() => { fetchData(); }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
     try {
       if (editingIng) {
         await axios.patch(`http://localhost:3000/api/ingredients/${editingIng.id}`, formData);
-        toast.success("Stock updated successfully");
+        toast.success("Item updated successfully");
       } else {
         await axios.post('http://localhost:3000/api/ingredients', formData);
-        toast.success("New ingredient added");
+        toast.success("New item added to inventory");
       }
       setIsModalOpen(false);
-      fetchIngredients();
+      setEditingIng(null);
+      fetchData();
     } catch (err) {
-      toast.error("Failed to save ingredient");
-    } finally {
-      setSubmitting(false);
+      toast.error("Failed to save item");
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Delete this ingredient?")) return;
+  const deleteIngredient = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm("Are you sure you want to delete this item?")) return;
     try {
       await axios.delete(`http://localhost:3000/api/ingredients/${id}`);
-      toast.success("Ingredient removed");
-      fetchIngredients();
+      setIngredients(ingredients.filter(i => i.id !== id));
+      toast.success("Item removed from inventory");
     } catch (err) {
-      toast.error("Cannot delete item");
+      toast.error("Failed to delete item");
     }
   };
 
-  const filtered = ingredients.filter(ing => 
-    ing.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const openEdit = (ing: Ingredient) => {
+    setEditingIng(ing);
+    setFormData({
+      name: ing.name,
+      stock: ing.stock,
+      unitId: ing.unitId,
+      lowStockThreshold: ing.lowStockThreshold
+    });
+    setIsModalOpen(true);
+  };
+
+  const filtered = ingredients.filter(i => 
+    i.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    // Locked height for 1080p to prevent full-page scroll
-    <div className="p-6 h-[calc(100vh-20px)] max-w-[1850px] mx-auto flex flex-col animate-in fade-in duration-700 overflow-hidden">
+    <div className="w-full h-full flex flex-col space-y-6 theme-transition overflow-hidden">
       
-      {/* Header - Fixed */}
-      <div className="flex justify-between items-center mb-8 shrink-0">
-        <div>
-          <h1 className="text-5xl font-black text-slate-900 tracking-tighter italic uppercase leading-none">Warehouse</h1>
-          <p className="text-slate-400 font-black uppercase text-[10px] tracking-[0.4em] mt-2 ml-1">
-            Oftsy Raw Material Engine
-          </p>
-        </div>
-        <button 
-          onClick={() => handleOpenModal()}
-          className="bg-slate-900 text-white px-10 py-5 rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] hover:bg-blue-600 shadow-2xl shadow-blue-100 transition-all flex items-center gap-3 active:scale-95"
-        >
-          <Plus size={18} /> New Material
-        </button>
-      </div>
-
-      {/* Quick Stats - Optimized spacing */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 shrink-0">
-        <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm flex flex-col justify-between">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Materials</p>
-          <p className="text-4xl font-black text-slate-900 tabular-nums">{ingredients.length}</p>
-        </div>
-        <div className="bg-amber-50 p-8 rounded-[3rem] border border-amber-100 shadow-sm flex flex-col justify-between">
-          <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Critical Stock Alerts</p>
-          <div className="flex items-center gap-4">
-            <p className="text-4xl font-black text-amber-700 tabular-nums">
-              {ingredients.filter(i => i.stock <= i.lowStockThreshold).length}
-            </p>
-            {ingredients.filter(i => i.stock <= i.lowStockThreshold).length > 0 && <AlertTriangle className="text-amber-500 animate-bounce" />}
+      {/* HEADER */}
+      <div className="flex justify-between items-center glass-panel p-6 rounded-[2.5rem] border-2 border-white/5 shrink-0">
+        <div className="flex items-center gap-5">
+          <div className="w-14 h-14 bg-brand rounded-2xl flex items-center justify-center text-white shadow-glow">
+            <Boxes size={28} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-text-main tracking-tighter uppercase italic leading-none">
+              Oftsy <span className="text-brand">Inventory</span>
+            </h1>
+            <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.4em] mt-1.5 focus:border-brand">Manage your stock and supplies</p>
           </div>
         </div>
-        <div className="bg-blue-600 p-8 rounded-[3rem] shadow-2xl shadow-blue-200 flex flex-col justify-between relative overflow-hidden">
-          <p className="text-[10px] font-black text-blue-100 uppercase tracking-widest relative z-10">Database Status</p>
-          <p className="text-4xl font-black text-white italic relative z-10 tracking-tighter">SECURED</p>
-          <Package className="absolute -right-4 -bottom-4 text-white/10" size={120} />
+
+        <div className="flex items-center gap-4">
+          <div className="relative group">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-hover:text-brand transition-all" size={18} />
+            <input 
+              type="text"
+              placeholder="Search items..."
+              className="bg-panel border-2 border-border-oftsy rounded-2xl py-4 pl-14 pr-6 w-80 outline-none focus:border-brand font-black text-[10px] uppercase tracking-widest transition-all"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <button 
+            onClick={() => { setEditingIng(null); setFormData({ name: '', stock: 0, unitId: '', lowStockThreshold: 10 }); setIsModalOpen(true); }}
+            className="flex items-center gap-2.5 px-8 py-4 bg-brand text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-glow hover:scale-[1.02] active:scale-100 transition-all border-2 border-brand/20"
+          >
+            <Plus size={18} /> Add New Item
+          </button>
         </div>
       </div>
 
-      {/* Toolbar - Sticky feel */}
-      <div className="relative mb-6 shrink-0">
-        <Search className="absolute left-8 top-1/2 -translate-y-1/2 text-slate-300" size={22} />
-        <input 
-          type="text"
-          placeholder="Filter warehouse items by name..."
-          className="w-full bg-white border border-slate-100 rounded-[2rem] py-6 pl-20 pr-8 outline-none focus:ring-8 focus:ring-blue-500/5 font-bold shadow-sm transition-all text-sm"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
-
-      {/* Scrollable Data Table Container */}
-      <div className="flex-1 bg-white rounded-[3.5rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col mb-4">
-        <div className="overflow-y-auto custom-scrollbar flex-1">
-          <table className="w-full text-left border-collapse">
-            <thead className="sticky top-0 z-20">
-              <tr className="bg-slate-50 border-b border-slate-100">
-                <th className="px-10 py-7 text-[10px] font-black text-slate-400 uppercase tracking-widest">Material Identification</th>
-                <th className="px-8 py-7 text-[10px] font-black text-slate-400 uppercase tracking-widest">Current Inventory</th>
-                <th className="px-8 py-7 text-[10px] font-black text-slate-400 uppercase tracking-widest">Safe Level</th>
-                <th className="px-8 py-7 text-[10px] font-black text-slate-400 uppercase tracking-widest">Alert Status</th>
-                <th className="px-10 py-7 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Control</th>
+      {/* STOCK TABLE */}
+      <div className="industrial-card rounded-[2.5rem] border-2 border-white/5 flex-1 overflow-hidden flex flex-col bg-surface/30 backdrop-blur-3xl">
+        <div className="overflow-y-auto flex-1 no-scrollbar p-6">
+          <table className="w-full text-left border-separate border-spacing-y-3">
+            <thead className="sticky top-0 z-10 bg-surface/50 backdrop-blur-xl">
+              <tr className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em]">
+                <th className="px-8 py-3">Item Name</th>
+                <th className="px-8 py-3">Unit</th>
+                <th className="px-8 py-3">In Stock</th>
+                <th className="px-8 py-3">Low Stock Alert</th>
+                <th className="px-8 py-3">Status</th>
+                <th className="px-8 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="py-32 text-center">
-                    <Loader2 className="animate-spin mx-auto text-blue-600" size={40} />
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-4">Accessing Warehouse...</p>
+            <tbody>
+              {filtered.map(ing => (
+                <tr key={ing.id} className="bg-panel/50 hover:bg-panel transition-all">
+                  <td className="px-8 py-4 font-black text-text-main uppercase tracking-tighter italic">{ing.name}</td>
+                  <td className="px-8 py-4 font-black text-text-muted uppercase tracking-widest text-[10px]">{ing.unit?.name || 'Units'}</td>
+                  <td className="px-8 py-4 font-black text-xl text-text-main tabular-nums">{ing.stock}</td>
+                  <td className="px-8 py-4 font-black text-text-muted tabular-nums">{ing.lowStockThreshold}</td>
+                  <td className="px-8 py-4">
+                    <span className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border ${ing.stock <= ing.lowStockThreshold ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-brand/10 text-brand border-brand/20'}`}>
+                      {ing.stock <= ing.lowStockThreshold ? 'Low Stock' : 'Optimal'}
+                    </span>
                   </td>
-                </tr>
-              ) : filtered.length === 0 ? (
-                <tr>
-                   <td colSpan={5} className="py-32 text-center">
-                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-4">No Materials Found</p>
-                   </td>
-                </tr>
-              ) : filtered.map((ing) => (
-                <tr key={ing.id} className="hover:bg-slate-50/80 transition-all group">
-                  <td className="px-10 py-7">
-                    <div className="flex items-center gap-5">
-                      <div className="p-4 bg-slate-100 rounded-2xl text-slate-400 group-hover:bg-slate-900 group-hover:text-white group-hover:rotate-6 transition-all duration-300">
-                        <Package size={20} />
-                      </div>
-                      <p className="font-black text-slate-900 text-base uppercase tracking-tighter italic">{ing.name}</p>
-                    </div>
-                  </td>
-                  <td className="px-8 py-7">
-                    <p className="font-black text-slate-900 text-lg tabular-nums">
-                      {ing.stock} <span className="text-[10px] text-slate-400 uppercase tracking-widest ml-1">{ing.unit}</span>
-                    </p>
-                  </td>
-                  <td className="px-8 py-7">
-                    <div className="flex items-center gap-2 text-slate-400">
-                       <ArrowDown size={14} />
-                       <p className="font-bold text-sm italic">&gt; {ing.lowStockThreshold} {ing.unit}</p>
-                    </div>
-                  </td>
-                  <td className="px-8 py-7">
-                    {ing.stock <= ing.lowStockThreshold ? (
-                      <span className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-full text-[9px] font-black uppercase tracking-widest w-fit animate-pulse border border-red-100">
-                        <AlertTriangle size={12} /> Refill Needed
-                      </span>
-                    ) : (
-                      <span className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full text-[9px] font-black uppercase tracking-widest w-fit border border-emerald-100">
-                        Stock Stable
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-10 py-7 text-right">
-                    <div className="flex justify-end gap-3">
-                      <button 
-                        onClick={() => handleOpenModal(ing)}
-                        className="p-4 bg-slate-50 hover:bg-blue-600 hover:text-white rounded-2xl transition-all shadow-sm active:scale-90"
-                      >
-                        <Edit3 size={18} />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(ing.id)}
-                        className="p-4 bg-slate-50 hover:bg-red-500 hover:text-white rounded-2xl transition-all shadow-sm active:scale-90"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                  <td className="px-8 py-4 text-right">
+                    <div className="flex justify-end gap-2">
+                       <button onClick={() => openEdit(ing)} className="p-2.5 bg-brand/5 text-brand rounded-xl hover:bg-brand hover:text-white transition-all">
+                          <Edit3 size={16} />
+                       </button>
+                       <button onClick={(e) => deleteIngredient(ing.id, e)} className="p-2.5 bg-red-500/5 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all">
+                          <Trash2 size={16} />
+                       </button>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {filtered.length === 0 && !loading && (
+            <div className="flex flex-col items-center justify-center py-20 opacity-20">
+               <Boxes size={64} className="mb-4" />
+               <p className="font-black text-xs uppercase tracking-widest">No inventory items found</p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* CRUD Modal - High Emphasis Design */}
+      {/* ADD/EDIT MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xl z-50 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-xl rounded-[4rem] p-12 shadow-2xl animate-in zoom-in-95 duration-300 relative border border-white/20">
-            <button 
-              onClick={() => setIsModalOpen(false)}
-              className="absolute top-10 right-10 text-slate-300 hover:text-slate-900 transition-colors"
-            >
-              <X size={32} />
-            </button>
-
-            <div className="mb-10">
-               <h2 className="text-4xl font-black uppercase tracking-tighter italic">
-                {editingIng ? 'Modify Stock' : 'Register Material'}
-              </h2>
-              <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-2">Warehouse Entry Protocol v1</p>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="space-y-8">
-              <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2 block">Full Material Name</label>
-                <input 
-                  className="w-full bg-slate-50 border-none rounded-[2rem] p-6 font-black text-slate-900 focus:ring-8 focus:ring-blue-500/5 transition-all outline-none"
-                  placeholder="e.g. DARK CHOCOLATE CHIPS"
-                  value={formData.name}
-                  onChange={e => setFormData({...formData, name: e.target.value})}
-                  required
-                />
+        <div className="fixed inset-0 bg-text-main/80 backdrop-blur-xl z-[100] flex items-center justify-center p-8">
+           <div className="bg-surface w-full max-w-xl rounded-[3rem] shadow-glow border-2 border-brand/20 overflow-hidden">
+              <div className="p-10 border-b-2 border-border-oftsy flex justify-between items-center bg-surface/50">
+                 <div>
+                    <h3 className="text-2xl font-black text-text-main uppercase italic">{editingIng ? 'Update Item' : 'Add New Item'}</h3>
+                    <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.4em] mt-1.5">Enter stock and unit details</p>
+                 </div>
+                 <button onClick={() => setIsModalOpen(false)} className="p-4 bg-panel rounded-2xl text-text-muted hover:text-brand transition-all border-2 border-border-oftsy">
+                    <X size={20} />
+                 </button>
               </div>
-
-              <div className="grid grid-cols-2 gap-8">
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2 block">Unit (kg/L/etc)</label>
-                  <input 
-                    className="w-full bg-slate-50 border-none rounded-[2rem] p-6 font-black text-slate-900 focus:ring-8 focus:ring-blue-500/5 transition-all outline-none"
-                    placeholder="Liters"
-                    value={formData.unit}
-                    onChange={e => setFormData({...formData, unit: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2 block">Low Alert Trigger</label>
-                  <input 
-                    type="number"
-                    className="w-full bg-slate-50 border-none rounded-[2rem] p-6 font-black text-slate-900 focus:ring-8 focus:ring-blue-500/5 transition-all outline-none"
-                    value={formData.lowStockThreshold}
-                    onChange={e => setFormData({...formData, lowStockThreshold: parseFloat(e.target.value)})}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="p-8 bg-slate-900 rounded-[3rem] shadow-xl border border-white/5 group">
-                <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest ml-2 mb-2 block group-hover:animate-pulse">Quantity In Hand</label>
-                <div className="flex items-center gap-4">
-                  <input 
-                    type="number"
-                    step="0.01"
-                    className="w-full bg-transparent text-white border-none p-0 font-black text-6xl outline-none tabular-nums"
-                    value={formData.stock}
-                    onChange={e => setFormData({...formData, stock: parseFloat(e.target.value)})}
-                    required
-                  />
-                  <span className="text-xl font-black text-slate-600 uppercase italic tracking-tighter">{formData.unit || '...'}</span>
-                </div>
-              </div>
-
-              <button 
-                type="submit"
-                disabled={submitting}
-                className="w-full bg-blue-600 text-white py-7 rounded-[2.5rem] font-black text-sm uppercase tracking-[0.3em] shadow-2xl shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-4 active:scale-95 disabled:grayscale"
-              >
-                {submitting ? <Loader2 className="animate-spin" /> : editingIng ? 'Commit Updates' : 'Confirm Registration'}
-              </button>
-            </form>
-          </div>
+              <form onSubmit={handleSubmit} className="p-12 space-y-8">
+                 <div className="space-y-2">
+                    <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.4em] ml-2">Item Name</label>
+                    <input 
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full bg-panel border-2 border-border-oftsy rounded-2xl py-4 px-6 outline-none focus:border-brand font-black text-sm uppercase"
+                      placeholder="e.g. Organic Milk"
+                      required
+                    />
+                 </div>
+                 <div className="grid grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                       <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.4em] ml-2">Measurement Unit</label>
+                       <select 
+                         value={formData.unitId}
+                         onChange={(e) => setFormData({...formData, unitId: e.target.value})}
+                         className="w-full bg-panel border-2 border-border-oftsy rounded-2xl py-4 px-6 outline-none focus:border-brand font-black text-xs uppercase tracking-widest cursor-pointer"
+                         required
+                       >
+                         <option value="">Select Unit</option>
+                         {units.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                       </select>
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.4em] ml-2">Current Stock</label>
+                       <input 
+                         type="number"
+                         value={formData.stock}
+                         onChange={(e) => setFormData({...formData, stock: Number(e.target.value)})}
+                         className="w-full bg-panel border-2 border-border-oftsy rounded-2xl py-4 px-6 outline-none focus:border-brand font-black text-sm uppercase"
+                         placeholder="0"
+                         required
+                       />
+                    </div>
+                 </div>
+                 <div className="space-y-2">
+                    <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.4em] ml-2">Low Stock Alert Level</label>
+                    <input 
+                      type="number"
+                      value={formData.lowStockThreshold}
+                      onChange={(e) => setFormData({...formData, lowStockThreshold: Number(e.target.value)})}
+                      className="w-full bg-panel border-2 border-border-oftsy rounded-2xl py-4 px-6 outline-none focus:border-brand font-black text-sm uppercase"
+                      placeholder="10"
+                      required
+                    />
+                 </div>
+                 <button type="submit" className="w-full py-6 bg-brand text-white rounded-[2rem] font-black text-sm uppercase tracking-[0.4em] shadow-glow hover:scale-[1.02] active:scale-100 transition-all border-2 border-brand/20">
+                    {editingIng ? 'Update Stock Item' : 'Add Stock Item'}
+                 </button>
+              </form>
+           </div>
         </div>
       )}
     </div>

@@ -5,26 +5,31 @@ import BottomNav from '../components/dashboard/BottomNav';
 
 const DashboardLayout = () => {
   return (
-    /* h-screen + flex-col keeps the header top and nav bottom perfectly fixed */
-    <div className="h-screen w-full bg-[#F8FAFC] text-slate-900 font-sans selection:bg-blue-100 flex flex-col overflow-hidden">
+    /* 
+       KIOSK SHELL: Fixed h-screen, no scrolling on the main container.
+       The overflow is handled internally by each page if needed, but 
+       designed to stay 100% within the 1080p viewport.
+    */
+    <div className="h-screen w-full flex flex-col overflow-hidden theme-transition bg-panel select-none">
       
-      {/* 1. TOP HEADER (Stretches full width) */}
-      <div className="w-full shrink-0">
+      {/* 1. TOP HEADER (Industrial Glass) */}
+      <div className="w-full shrink-0 z-50">
         <Header />
       </div>
 
-      {/* 2. MAIN VIEWPORT (No max-width, hits the edges) */}
-      <main className="flex-1 w-full overflow-y-auto px-4 md:px-8 lg:px-10 py-6 custom-scrollbar">
-        {/* Removing 'max-w-7xl' and 'mx-auto' allows your cards 
-           to utilize 100% of the screen width. 
+      {/* 2. MAIN VIEWPORT (The 'Frosted' Canvas) */}
+      <main className="flex-1 w-full relative overflow-hidden flex flex-col">
+        {/*
+           Every page injected via <Outlet /> inherits the kiosk constraints.
+           We add a subtle entry animation here for consistent UX.
         */}
-        <div className="w-full h-full">
+        <div className="flex-1 w-full overflow-y-auto no-scrollbar px-6 py-4 animate-kiosk-entry">
           <Outlet />
         </div>
       </main>
 
-      {/* 3. BOTTOM NAVIGATION (Full width or centered as per your component) */}
-      <div className="w-full shrink-0">
+      {/* 3. ENHANCED BOTTOM NAVIGATION */}
+      <div className="w-full shrink-0 relative z-50 pb-8">
         <BottomNav />
       </div>
       

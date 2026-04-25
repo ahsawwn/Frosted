@@ -27,4 +27,28 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: { 
+        category: true, 
+        ingredients: {
+          include: {
+            ingredient: {
+              include: { unit: true }
+            }
+          }
+        }
+      }
+    });
+    
+    if (!product) return res.status(404).json({ error: "Not found" });
+    res.json(product);
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 export default router;

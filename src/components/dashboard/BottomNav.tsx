@@ -1,78 +1,76 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
-  LayoutDashboard, ShoppingCart, FileText, Package, 
-  BookOpen, Users, Settings, ChevronLeft 
+  Home, ShoppingCart, ReceiptText, Boxes, 
+  Users, Settings, ChevronLeft,
+  MonitorCog, ChefHat, UserCircle, Ticket, ScrollText
 } from 'lucide-react';
+
+const navItems = [
+  { path: '/dashboard', icon: Home, label: 'Dashboard', roles: ['SUPERADMIN', 'ADMIN', 'MANAGER', 'CASHIER', 'KITCHEN'] },
+  { path: '/pos', icon: ShoppingCart, label: 'Sales', roles: ['SUPERADMIN', 'ADMIN', 'MANAGER', 'CASHIER'] },
+  { path: '/kitchen', icon: ChefHat, label: 'Kitchen', roles: ['SUPERADMIN', 'ADMIN', 'MANAGER', 'KITCHEN'] },
+  { path: '/inventory', icon: Boxes, label: 'Inventory', roles: ['SUPERADMIN', 'ADMIN', 'MANAGER', 'KITCHEN'] },
+  { path: '/products', icon: MonitorCog, label: 'Catalog', roles: ['SUPERADMIN', 'ADMIN', 'MANAGER'] },
+  { path: '/recipes', icon: ScrollText, label: 'Recipes', roles: ['SUPERADMIN', 'ADMIN', 'MANAGER', 'KITCHEN', 'CASHIER'] },
+  { path: '/transactions', icon: ReceiptText, label: 'History', roles: ['SUPERADMIN', 'ADMIN', 'MANAGER', 'CASHIER'] },
+  { path: '/customers', icon: UserCircle, label: 'Customers', roles: ['SUPERADMIN', 'ADMIN', 'MANAGER', 'CASHIER'] },
+  { path: '/coupons', icon: Ticket, label: 'Coupons', roles: ['SUPERADMIN', 'ADMIN', 'MANAGER'] },
+  { path: '/staff', icon: Users, label: 'Staff', roles: ['SUPERADMIN', 'ADMIN', 'MANAGER'] },
+  { path: '/settings', icon: Settings, label: 'Settings', roles: ['SUPERADMIN', 'ADMIN', 'MANAGER'] },
+];
 
 const BottomNav = () => {
   const [isHidden, setIsHidden] = useState(false);
+  const user = JSON.parse(localStorage.getItem('user') || '{"role": "ADMIN"}');
+
+  const filteredItems = navItems.filter(item => item.roles.includes(user.role));
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3">
-      
-      {/* 1. The Navigation Bar (Uses global theme variables) */}
-      <nav 
-        className={`
-          bg-text-main/95 backdrop-blur-xl p-2.5 rounded-[2.5rem] shadow-oftsy
-          border border-white/10 flex items-center justify-between transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]
-          ${isHidden 
-            ? 'translate-x-[20px] opacity-0 pointer-events-none scale-90' 
-            : 'translate-x-0 opacity-100'
-          }
-          w-[90vw] max-w-2xl
-        `}
-      >
-        <NavItem to="/dashboard" icon={<LayoutDashboard size={20} />} label="Home" />
-        <NavItem to="/pos" icon={<ShoppingCart size={20} />} label="POS" />
-        <NavItem to="/transactions" icon={<FileText size={20} />} label="Logs" />
-        <NavItem to="/inventory" icon={<Package size={20} />} label="Stock" />
-        <NavItem to="/recipes" icon={<BookOpen size={20} />} label="Recipe" />
-        <NavItem to="/staff" icon={<Users size={20} />} label="Staff" />
-        <NavItem to="/settings" icon={<Settings size={20} />} label="Config" />
+    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] transition-all duration-700 flex items-center gap-4">
+      <nav className={`glass-panel p-1.5 rounded-[2.5rem] border-2 border-white/5 shadow-glow flex items-center gap-1 transition-all duration-700 ${isHidden ? 'opacity-0 translate-y-20 pointer-events-none scale-90' : 'opacity-100 translate-y-0 scale-100'}`}>
+        <div className="flex items-center gap-1">
+          {filteredItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              end={item.path === '/'}
+              className={({ isActive }) => `
+                relative flex flex-col items-center justify-center w-16 h-14 rounded-2xl transition-all duration-500 group
+                ${isActive 
+                  ? 'bg-brand text-white shadow-glow' 
+                  : 'text-text-muted hover:bg-white/5 hover:text-brand'
+                }
+              `}
+            >
+              {({ isActive }) => (
+                <>
+                  <item.icon size={16} className={`transition-transform duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                  <span className={`text-[7px] font-black uppercase tracking-[0.1em] mt-1 transition-all duration-500 whitespace-nowrap ${isActive ? 'opacity-100' : 'opacity-40 group-hover:opacity-100'}`}>
+                    {item.label}
+                  </span>
+                  {isActive && (
+                    <div className="absolute -bottom-1 w-1 h-1 bg-white rounded-full animate-pulse" />
+                  )}
+                </>
+              )}
+            </NavLink>
+          ))}
+        </div>
       </nav>
 
-      {/* 2. The Toggle Button (Brand-aware colors) */}
       <button 
         onClick={() => setIsHidden(!isHidden)}
         className={`
-          p-4 rounded-full shadow-2xl transition-all duration-700 flex items-center justify-center border border-white/5
-          ${isHidden 
-            ? 'bg-brand text-white rotate-0 translate-x-[-150%] sm:translate-x-[-300%]' 
-            : 'bg-text-main text-text-muted hover:text-surface rotate-180'
-          }
+          w-14 h-14 rounded-full glass-panel flex items-center justify-center 
+          transition-all duration-700 hover:scale-110 active:scale-95 border-2 border-white/5 shadow-glow shrink-0
+          ${isHidden ? 'bg-brand text-white' : 'bg-surface text-text-muted hover:text-brand'}
         `}
       >
-        <ChevronLeft size={24} />
+        <ChevronLeft size={22} className={`transition-transform duration-700 ${isHidden ? 'rotate-180' : 'rotate-0'}`} />
       </button>
     </div>
   );
 };
-
-const NavItem = ({ to, icon, label }: { to: string; icon: React.ReactNode; label: string }) => (
-  <NavLink
-    to={to}
-    className={({ isActive }) => `
-      group relative flex flex-col items-center justify-center py-2 px-3 rounded-3xl transition-all duration-500
-      ${isActive ? 'bg-brand text-white flex-[2]' : 'text-text-muted hover:text-surface flex-1'}
-    `}
-  >
-    {({ isActive }) => (
-      <>
-        <div className="relative z-10 transition-transform group-hover:scale-110">{icon}</div>
-        <span className={`
-          text-[8px] font-black uppercase mt-1 tracking-[0.2em] transition-all duration-300
-          ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-50 absolute'}
-        `}>
-          {label}
-        </span>
-        {/* Glow effect matching the theme accent */}
-        {isActive && (
-          <div className="absolute inset-0 bg-brand/30 blur-xl transition-opacity animate-pulse" />
-        )}
-      </>
-    )}
-  </NavLink>
-);
 
 export default BottomNav;

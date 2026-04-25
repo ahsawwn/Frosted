@@ -19,9 +19,12 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const root = window.document.documentElement;
     
-    // Remove old themes
-    root.classList.remove('light', 'dark', 'softsy');
-    // Add new theme
+    // Smooth Transition Injector
+    root.classList.add('theme-transition');
+    
+    // Remove old enterprise themes
+    root.classList.remove('light', 'dark', 'emerald-enterprise', 'midnight-gold', 'ocean-pro');
+    // Add new industrial theme
     root.classList.add(theme);
     
     localStorage.setItem('oftsy-theme', theme);

@@ -10,6 +10,11 @@ import orderRoutes from './routes/orderRoutes';
 import ingredientRoutes from './routes/ingredientRoutes';
 import statsRoutes from './routes/statsRoutes';
 import categoryRoutes from './routes/categoryRoutes';
+import searchRoutes from './routes/searchRoute';
+import unitRoutes from './routes/units';
+import customerRoutes from './routes/customerRoutes';
+import couponRoutes from './routes/couponRoutes';
+import settingRoutes from './routes/settingRoutes';
 
 dotenv.config();
 const app = express();
@@ -26,9 +31,14 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/ingredients', ingredientRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/units', unitRoutes);
+app.use('/api/customers', customerRoutes);
+app.use('/api/coupons', couponRoutes);
+app.use('/api/settings', settingRoutes);
 
 // Health Check
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ status: 'online', system: 'Oftsy POS Service', timestamp: new Date() });
 });
 

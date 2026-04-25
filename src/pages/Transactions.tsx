@@ -1,19 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { 
-  Eye, Loader2, Search, ReceiptText, Printer, 
-  Trash2, RefreshCw, ArrowUpDown 
+  Loader2, Search, ReceiptText, Printer, 
+  Trash2, RefreshCw, ArrowUpDown
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import ReceiptModal from '../components/ReceiptModal'; // Adjust the path as needed
+import ReceiptModal from '../components/ReceiptModal';
 
 const TransactionPage = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
@@ -23,7 +22,7 @@ const TransactionPage = () => {
       const response = await axios.get('http://localhost:3000/api/orders');
       setOrders(response.data);
     } catch (error) {
-      toast.error("Terminal Sync Failed");
+      toast.error("Telemetry Link Failure");
     } finally {
       setLoading(false);
     }
@@ -32,12 +31,11 @@ const TransactionPage = () => {
   useEffect(() => { fetchOrders(); }, []);
 
   const openPreview = (order: any) => {
-    // Transform order data to match the ReceiptModal's expected props
     const formattedData = {
       ...order,
       isDuplicate: true,
-      subtotal: order.totalAmount / 1.15, // Reverse calculation for display if not in DB
-      taxAmount: order.totalAmount - (order.totalAmount / 1.15),
+      subtotal: order.subtotal, 
+      taxAmount: order.taxAmount,
       items: order.items.map((item: any) => ({
         name: item.product?.name || "Assorted Scoop",
         quantity: item.quantity,
@@ -49,13 +47,13 @@ const TransactionPage = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if(!window.confirm("SECURITY ALERT: Void this transaction?")) return;
+    if(!window.confirm("CRITICAL_SECURITY_ALERT: Void this node transaction?")) return;
     try {
       await axios.delete(`http://localhost:3000/api/orders/${id}`);
       setOrders(orders.filter(o => o.id !== id));
       toast.success("Transaction Voided");
     } catch (err: any) {
-      toast.error(err.response?.data?.error || "Delete Failed");
+      toast.error(err.response?.data?.error || "Purge Protocol Fail");
     }
   };
 
@@ -65,85 +63,97 @@ const TransactionPage = () => {
   );
 
   return (
-    <div className="w-full max-w-[1850px] mx-auto px-6 py-4 space-y-4 h-[calc(100vh-2rem)] flex flex-col">
+    <div className="w-full h-full flex flex-col space-y-6 theme-transition overflow-hidden">
       
-      {/* 1. COMPACT DASH HEADER */}
-      <div className="flex justify-between items-center bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-slate-900 rounded-2xl text-pink-500 shadow-lg">
-            <ReceiptText size={22} />
+      {/* HUD: TRANSACTION LEDGER */}
+      <div className="flex justify-between items-center glass-panel p-6 rounded-[2.5rem] border-2 border-white/5 shrink-0">
+        <div className="flex items-center gap-5">
+          <div className="w-14 h-14 bg-text-main rounded-2xl flex items-center justify-center text-brand shadow-glow animate-pulse">
+            <ReceiptText size={28} />
           </div>
           <div>
-            <h1 className="text-xl font-black text-slate-900 tracking-tighter uppercase italic">Oftsy Ledger</h1>
-            <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.4em] mt-1">Archive & Reprint Terminal</p>
+            <h1 className="text-2xl font-black text-text-main tracking-tighter uppercase italic leading-none">
+              Order <span className="text-brand">History</span>
+            </h1>
+            <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.4em] mt-1.5 focus:border-brand">Record of all past sales</p>
           </div>
         </div>
         
-        <div className="flex items-center gap-4">
-           <div className="hidden md:flex bg-slate-50 border border-slate-100 px-5 py-3 rounded-xl items-center gap-6">
-              <div>
-                <p className="text-[7px] font-black text-slate-400 uppercase mb-1 tracking-widest">Total Sales</p>
-                <p className="text-base font-black tabular-nums leading-none">₨ {orders.reduce((acc, curr) => acc + curr.totalAmount, 0).toLocaleString()}</p>
+        <div className="flex items-center gap-8">
+           <div className="hidden md:flex items-center gap-10 bg-panel border-2 border-border-oftsy px-8 py-4 rounded-2xl">
+              <div className="flex flex-col gap-0.5">
+                <p className="text-[8px] font-black text-text-muted uppercase tracking-[0.3em] leading-none">Total Revenue</p>
+                <p className="text-xl font-black text-text-main tabular-nums leading-none tracking-tighter">₨ {orders.reduce((acc, curr) => acc + curr.totalAmount, 0).toLocaleString()}</p>
+              </div>
+              <div className="w-[1.5px] h-6 bg-border-oftsy" />
+              <div className="flex flex-col gap-0.5">
+                <p className="text-[8px] font-black text-text-muted uppercase tracking-[0.3em] leading-none">Total Orders</p>
+                <p className="text-xl font-black text-brand tabular-nums leading-none tracking-tighter">{orders.length}</p>
               </div>
            </div>
-           <button onClick={fetchOrders} className="p-3 bg-slate-900 text-white hover:bg-pink-500 rounded-xl transition-all">
-              <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+           <button onClick={fetchOrders} className="p-4 bg-brand text-white hover:scale-[1.02] active:scale-95 rounded-xl shadow-glow transition-all">
+              <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
            </button>
         </div>
       </div>
 
-      {/* 2. SLIM SEARCH */}
-      <div className="relative shrink-0">
-        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+      {/* SEARCH COMMAND */}
+      <div className="relative shrink-0 group">
+        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-hover:text-brand transition-all" size={20} />
         <input 
           type="text"
-          placeholder="Search by Invoice ID or Method (Cash/Card)..."
-          className="w-full bg-white border border-slate-100 rounded-xl py-3 pl-12 pr-4 font-bold text-xs outline-none focus:ring-4 focus:ring-pink-500/5 transition-all"
+          placeholder="Search by Order ID..."
+          className="w-full bg-surface border-2 border-border-oftsy rounded-2xl py-5 pl-16 pr-8 font-black text-[10px] outline-none focus:border-brand transition-all placeholder:text-text-muted/30 uppercase tracking-[0.1em]"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      {/* 3. TABLE AREA */}
-      <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm flex-1 overflow-hidden flex flex-col">
-        <div className="overflow-y-auto flex-1 custom-scrollbar">
-          <table className="w-full text-left border-collapse">
-            <thead className="sticky top-0 bg-white z-10 border-b border-slate-50">
-              <tr className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                <th className="px-8 py-4"><div className="flex items-center gap-2">Invoice <ArrowUpDown size={10}/></div></th>
-                <th className="px-6 py-4">Payment</th>
-                <th className="px-6 py-4">Total</th>
-                <th className="px-8 py-4 text-right">Actions</th>
+      {/* LEDGER DATA TABLE */}
+      <div className="industrial-card rounded-[2.5rem] border-2 border-white/5 flex-1 overflow-hidden flex flex-col bg-surface/30 backdrop-blur-3xl">
+        <div className="overflow-y-auto flex-1 no-scrollbar p-4">
+          <table className="w-full text-left border-separate border-spacing-y-3">
+            <thead className="sticky top-0 z-10">
+              <tr className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em]">
+                <th className="px-8 py-3"><div className="flex items-center gap-2">Order ID <ArrowUpDown size={12}/></div></th>
+                <th className="px-8 py-3">Payment</th>
+                <th className="px-8 py-3">Total Paid</th>
+                <th className="px-8 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody>
               {loading ? (
-                <tr><td colSpan={4} className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-pink-500" /></td></tr>
+                <tr><td colSpan={4} className="py-40 text-center"><Loader2 className="animate-spin mx-auto text-brand" size={48} /></td></tr>
               ) : filteredOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-slate-50/50 transition-all group">
-                  <td className="px-8 py-4">
-                    <p className="font-black text-slate-900 text-xs">#{order.id.slice(-6).toUpperCase()}</p>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase">{format(new Date(order.createdAt), 'MMM dd • hh:mm a')}</p>
+                <tr key={order.id} className="group hover:bg-surface transition-all">
+                  <td className="px-10 py-7 bg-panel/30 first:rounded-l-[2rem] border-y-2 border-l-2 border-transparent group-hover:border-border-oftsy border-l-transparent group-hover:bg-surface">
+                    <div className="flex items-center gap-5">
+                       <div className="w-14 h-14 bg-text-main rounded-2xl flex items-center justify-center text-brand text-[10px] font-black shadow-glow">#{order.id.slice(-4).toUpperCase()}</div>
+                       <div>
+                          <p className="font-black text-text-main text-sm uppercase tracking-widest font-mono">ID: {order.id.slice(-6).toUpperCase()}</p>
+                          <p className="text-[9px] font-bold text-text-muted uppercase mt-1 opacity-50">{format(new Date(order.createdAt), 'MMM dd • hh:mm:ss a')}</p>
+                       </div>
+                    </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${
+                  <td className="px-10 py-7 bg-panel/30 border-y-2 border-transparent group-hover:border-border-oftsy group-hover:bg-surface">
+                    <span className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] border-2 ${
                       order.paymentMethod?.toUpperCase() === 'CARD' 
-                        ? 'bg-blue-50 text-blue-600 border-blue-100' 
-                        : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                        ? 'bg-brand/10 text-brand border-brand/20 shadow-glow' 
+                        : 'bg-white/5 text-text-muted border-border-oftsy'
                     }`}>
                       {order.paymentMethod || 'CASH'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 font-black text-slate-900 text-sm">
+                  <td className="px-10 py-7 bg-panel/30 border-y-2 border-transparent group-hover:border-border-oftsy group-hover:bg-surface font-black text-text-main text-xl tabular-nums italic">
                     ₨ {order.totalAmount.toLocaleString()}
                   </td>
-                  <td className="px-8 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => openPreview(order)} className="p-2.5 bg-slate-50 text-slate-400 hover:bg-slate-900 hover:text-white rounded-lg transition-all" title="View & Print">
-                        <Printer size={16} />
+                  <td className="px-10 py-7 bg-panel/30 last:rounded-r-[2rem] border-y-2 border-r-2 border-transparent group-hover:border-border-oftsy group-hover:bg-surface text-right border-r-transparent">
+                    <div className="flex items-center justify-end gap-4">
+                      <button onClick={() => openPreview(order)} className="p-4 bg-surface text-text-muted hover:text-brand hover:border-brand border-2 border-border-oftsy rounded-2xl transition-all shadow-sm" title="Re-Print">
+                        <Printer size={20} />
                       </button>
-                      <button onClick={() => handleDelete(order.id)} className="p-2.5 bg-slate-50 text-slate-400 hover:bg-red-500 hover:text-white rounded-lg transition-all" title="Void Transaction">
-                        <Trash2 size={16} />
+                      <button onClick={() => handleDelete(order.id)} className="p-4 bg-surface text-text-muted hover:text-red-500 hover:border-red-500 border-2 border-border-oftsy rounded-2xl transition-all shadow-sm" title="Void Order">
+                        <Trash2 size={20} />
                       </button>
                     </div>
                   </td>
@@ -154,7 +164,6 @@ const TransactionPage = () => {
         </div>
       </div>
 
-      {/* 4. PROFESSIONAL RECEIPT MODAL */}
       <ReceiptModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 

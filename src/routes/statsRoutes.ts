@@ -3,7 +3,7 @@ import { prisma } from '../lib/prisma';
 
 const router = Router();
 
-// GET: Summary for the 4 dashboard boxes
+// GET: Summary for the dashboard
 router.get('/sales-summary', async (req, res) => {
   try {
     const orders = await prisma.order.findMany();
@@ -20,56 +20,31 @@ router.get('/sales-summary', async (req, res) => {
 // GET: Low stock items count
 router.get('/low-stock-count', async (req, res) => {
   try {
-    // This assumes your Ingredient model has 'stock' and 'lowStockThreshold'
-    const count = await prisma.ingredient.count({
-      where: {
-        stock: { lte: prisma.ingredient.fields.lowStockThreshold }
-      }
+    // Fetch all ingredients and filter in memory to compare field vs field
+    // Alternatively, use a raw query if performance is an issue
+    const ingredients = await prisma.ingredient.findMany();
+    const lowStockItems = ingredients.filter(ing => ing.stock <= ing.lowStockThreshold);
+    res.json({ count: lowStockItems.length });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch low stock count" });
+  }
+});
+
+// GET: Staff count
+router.get('/staff-count', async (req, res) => {
+  try {
+    const count = await prisma.user.count({
+      where: { 
+        role: { in: ['USER', 'ADMIN', 'SUPERADMIN'] } // Count all valid roles
+      } 
     });
     res.json({ count });
   } catch (error) {
-    res.json({ count: 0 }); // Fallback so dashboard doesn't crash
+    res.status(500).json({ error: "Failed to fetch staff count" });
   }
 });
 
-// GET: Recent activity (last 5 orders)
-router.get('/recent-activity', async (req, res) => {
-  try {
-    const orders = await prisma.order.findMany({
-      take: 5,
-      orderBy: { createdAt: 'desc' },
-    });
-    res.json(orders);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch activity" });
-  }
-});
-
-
-// 1. Sales Summary
-router.get('/sales-summary', async (req, res) => {
-  const orders = await prisma.order.findMany();
-  const total = orders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
-  res.json({ totalAmount: total, count: orders.length });
-});
-
-// 2. Low Stock (Make sure your model name is 'ingredient')
-router.get('/low-stock-count', async (req, res) => {
-  const count = await prisma.ingredient.count({
-    where: { stock: { lte: 10 } } // Or your custom threshold
-  });
-  res.json({ count });
-});
-
-// 3. Staff Count
-router.get('/staff-count', async (req, res) => {
-  const count = await prisma.user.count({
-    where: { role: 'STAFF' } 
-  });
-  res.json({ count });
-});
-
-// 4. Recent Activity
+// GET: Recent activity (last 10 orders with items and products included)
 router.get('/recent-activity', async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
@@ -77,7 +52,7 @@ router.get('/recent-activity', async (req, res) => {
       orderBy: { createdAt: 'desc' },
       include: { 
         items: {
-          include: { product: true } // This ensures product names show up
+          include: { product: true } 
         } 
       }
     });

@@ -2,30 +2,55 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   Plus, Trash2, Save, Utensils, 
-  Info, ChevronRight, Loader2, Search 
+  ChevronRight, Loader2, Search,
+  X, Ruler, Layers, ChevronDown
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+
+interface Unit {
+  id: string;
+  name: string;
+  short: string;
+}
 
 interface Ingredient {
   id: string;
   name: string;
-  unit: string;
+}
+
+interface RecipeItem {
+  ingredientId: string;
+  quantity: number;
+  unitId: string;
 }
 
 interface Product {
   id: string;
   name: string;
   price: number;
-  ingredients?: any[];
+  ingredients?: RecipeItem[]; 
 }
+
+interface RecipeRow {
+  ingredientId: string;
+  quantity: number;
+  unitId: string;
+}
+
+const API_URL = 'http://localhost:3000/api';
 
 const Recipes = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [units, setUnits] = useState<Unit[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [recipeRows, setRecipeRows] = useState<{ ingredientId: string; quantity: number }[]>([]);
+  const [recipeRows, setRecipeRows] = useState<RecipeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const [isUnitModalOpen, setIsUnitModalOpen] = useState(false);
+  const [newUnit, setNewUnit] = useState({ name: '', short: '' });
 
   useEffect(() => {
     fetchInitialData();
@@ -33,208 +58,267 @@ const Recipes = () => {
 
   const fetchInitialData = async () => {
     try {
-      const [prodRes, ingRes] = await Promise.all([
-        axios.get('http://localhost:3000/api/products'),
-        axios.get('http://localhost:3000/api/ingredients')
+      const [prodRes, ingRes, unitRes] = await Promise.all([
+        axios.get(`${API_URL}/products`),
+        axios.get(`${API_URL}/ingredients`),
+        axios.get(`${API_URL}/units`)
       ]);
       setProducts(prodRes.data);
       setIngredients(ingRes.data);
+      setUnits(unitRes.data);
     } catch (err) {
-      toast.error("Failed to load recipe data");
+      toast.error("Telemetry failed to sync");
     } finally {
       setLoading(false);
     }
   };
 
   const handleProductSelect = (product: Product) => {
-  setSelectedProduct(product);
-
-  // Check if the product has the ingredients array from the backend
-  if (product.ingredients && product.ingredients.length > 0) {
-    // Map the database fields to your frontend state fields
-    const loadedRecipe = product.ingredients.map(item => ({
-      ingredientId: item.ingredientId,
-      quantity: item.quantity
-    }));
-    setRecipeRows(loadedRecipe);
-  } else {
-    // Default empty row if no recipe exists
-    setRecipeRows([{ ingredientId: '', quantity: 0 }]);
-  }
-};
-
-  const addRow = () => setRecipeRows([...recipeRows, { ingredientId: '', quantity: 0 }]);
-
-  const removeRow = (index: number) => {
-    const updated = recipeRows.filter((_, i) => i !== index);
-    setRecipeRows(updated);
+    setSelectedProduct(product);
+    if (product.ingredients && product.ingredients.length > 0) {
+      setRecipeRows(product.ingredients.map(item => ({
+        ingredientId: item.ingredientId,
+        quantity: item.quantity,
+        unitId: item.unitId
+      })));
+    } else {
+      setRecipeRows([{ ingredientId: '', quantity: 0, unitId: '' }]);
+    }
   };
 
-  const updateRow = (index: number, field: string, value: any) => {
+  const updateRow = (index: number, field: keyof RecipeRow, value: any) => {
     const updated = [...recipeRows];
-    updated[index] = { ...updated[index], [field]: value };
+    if (field === 'quantity') {
+      updated[index][field] = value === '' ? 0 : Number(value);
+    } else {
+      updated[index][field] = value as string;
+    }
     setRecipeRows(updated);
   };
 
-const saveRecipe = async () => {
-  if (!selectedProduct) return;
-  
-  // Ensure we only send rows that have BOTH an ingredient selected and a quantity > 0
-  const validIngredients = recipeRows.filter(
-    (r) => r.ingredientId.trim() !== "" && r.quantity > 0
+  const saveRecipe = async () => {
+    if (!selectedProduct) return;
+    const validRows = recipeRows.filter(r => 
+      r.ingredientId.trim() !== '' && 
+      r.unitId.trim() !== '' && 
+      r.quantity > 0
+    );
+    if (validRows.length === 0) return toast.error("BOM Structure Violation");
+
+    setSaving(true);
+    try {
+      await axios.post(`${API_URL}/ingredients/recipe`, {
+        productId: selectedProduct.id,
+        ingredients: validRows
+      });
+      toast.success("BOM Protocol Deployed");
+      const prodRes = await axios.get(`${API_URL}/products`);
+      setProducts(prodRes.data);
+      const updatedProduct = prodRes.data.find((p: Product) => p.id === selectedProduct.id);
+      if (updatedProduct) setSelectedProduct(updatedProduct);
+    } catch (err) {
+      toast.error("Deployment failed: Write Error");
+    } finally { 
+      setSaving(false); 
+    }
+  };
+
+  if (loading) return (
+    <div className="h-full flex flex-col items-center justify-center opacity-20">
+      <Loader2 className="animate-spin text-brand mb-6" size={64} />
+      <p className="font-black text-xs uppercase tracking-widest text-text-main">Waking_Recipe_Engine...</p>
+    </div>
   );
 
-  if (validIngredients.length === 0) {
-    toast.error("Please add at least one valid ingredient");
-    return;
-  }
-
-  try {
-    await axios.post('http://localhost:3000/api/recipes', {
-      productId: selectedProduct.id,
-      ingredients: validIngredients
-    });
-    // ... rest of logic
-  } catch (err) {
-    console.error(err); // Look at the browser console for the specific error!
-  }
-  await fetchInitialData();
-    toast.success("Recipe saved successfully!");
-};
-
   return (
-    <div className="p-8 max-w-[1400px] mx-auto animate-in fade-in duration-500">
-      <div className="mb-10">
-        <h1 className="text-4xl font-black text-slate-900 tracking-tighter">RECIPE BUILDER</h1>
-        <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em]">Link Menu Items to Warehouse Stock</p>
+    <div className="h-full flex flex-col space-y-6 theme-transition overflow-hidden">
+      
+      {/* HUD: BOM CONTROLLER */}
+      <div className="flex justify-between items-center glass-panel p-6 rounded-[2.5rem] border-2 border-white/5 shrink-0">
+        <div className="flex items-center gap-5">
+          <div className="w-14 h-14 bg-brand rounded-2xl flex items-center justify-center text-white shadow-glow">
+            <Layers size={28} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-text-main tracking-tighter uppercase italic leading-none">
+              Oftsy <span className="text-brand">Recipes</span>
+            </h1>
+            <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] mt-1.5 focus:border-brand">Composition Protocol</p>
+          </div>
+        </div>
+
+        <button 
+          onClick={() => setIsUnitModalOpen(true)}
+          className="flex items-center gap-2.5 px-8 py-4 bg-panel border-2 border-border-oftsy rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-main hover:bg-surface hover:border-brand transition-all shadow-sm"
+        >
+          <Ruler size={18} className="text-brand" /> Units.sys
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* LEFT: Product Selection */}
-        <div className="lg:col-span-4 bg-white rounded-[2.5rem] border border-slate-100 p-6 shadow-sm overflow-hidden h-[70vh] flex flex-col">
-          <div className="relative mb-6">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+      <div className="flex-1 flex gap-6 min-h-0 min-w-0">
+        
+        {/* SIDEBAR: PRODUCT DOMAINS */}
+        <div className="w-1/3 glass-panel rounded-[2.5rem] p-6 border-2 border-white/5 flex flex-col min-h-0">
+          <div className="relative mb-6 shrink-0">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
             <input 
               type="text" 
-              placeholder="Search products..." 
-              className="w-full bg-slate-50 border-none rounded-xl py-3 pl-12 pr-4 text-sm font-bold"
+              placeholder="Query product nodes..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-panel border-2 border-transparent rounded-2xl py-4 pl-14 pr-6 text-[10px] font-black uppercase outline-none focus:border-brand transition-all"
             />
           </div>
-
           <div className="flex-1 overflow-y-auto space-y-2 no-scrollbar">
-            {products.map(product => (
+            {products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).map(product => (
               <button
                 key={product.id}
                 onClick={() => handleProductSelect(product)}
-                className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all border ${
-                  selectedProduct?.id === product.id 
-                  ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100' 
-                  : 'bg-white border-transparent hover:bg-slate-50 text-slate-600'
+                className={`w-full flex items-center justify-between p-5 rounded-2xl transition-all border-2 ${
+                  selectedProduct?.id === product.id ? 'bg-brand border-brand text-white shadow-glow' : 'bg-panel border-transparent hover:border-brand/30 text-text-muted hover:text-text-main'
                 }`}
               >
                 <div className="text-left">
-                  <p className="font-black text-sm uppercase tracking-tight">{product.name}</p>
-                  <p className={`text-[10px] font-bold ${selectedProduct?.id === product.id ? 'text-blue-200' : 'text-slate-400'}`}>
-                    ₨ {product.price}
-                  </p>
+                  <p className="font-black text-[11px] uppercase tracking-widest leading-none">{product.name}</p>
+                  <p className={`text-[9px] font-black uppercase mt-1 tracking-widest ${selectedProduct?.id === product.id ? 'text-white/60' : 'text-text-muted/40'}`}>Node_{product.id.slice(-4).toUpperCase()}</p>
                 </div>
-                <ChevronRight size={16} opacity={0.5} />
+                <ChevronRight size={14} className={selectedProduct?.id === product.id ? 'text-white' : 'text-text-muted'} />
               </button>
             ))}
           </div>
         </div>
 
-        {/* RIGHT: Recipe Editor */}
-        <div className="lg:col-span-8">
+        {/* EDITOR: BOM COMPOSITION */}
+        <div className="flex-1 flex flex-col min-h-0 min-w-0">
           {selectedProduct ? (
-            <div className="bg-white rounded-[2.5rem] border border-slate-100 p-10 shadow-sm min-h-[70vh] flex flex-col">
-              <div className="flex justify-between items-start mb-10">
-                <div className="flex items-center gap-4">
-                  <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl">
-                    <Utensils size={24} />
+            <div className="industrial-card p-8 flex flex-col flex-1 border-2 border-white/5 min-h-0 bg-surface/50 backdrop-blur-3xl">
+              <div className="flex justify-between items-center mb-8 shrink-0">
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 bg-text-main text-brand rounded-2xl flex items-center justify-center shadow-glow">
+                    <Utensils size={32} />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black text-slate-900">{selectedProduct.name}</h2>
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Recipe Configuration</p>
+                    <h2 className="text-2xl font-black text-text-main uppercase tracking-tighter italic">{selectedProduct.name}</h2>
+                    <p className="text-brand text-[9px] font-black uppercase tracking-[0.3em] mt-1">Resource Selection Protocol</p>
                   </div>
                 </div>
                 <button 
-                  onClick={saveRecipe}
-                  disabled={saving}
-                  className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all flex items-center gap-2"
+                  onClick={saveRecipe} 
+                  disabled={saving} 
+                  className="bg-brand text-white px-10 py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.4em] hover:scale-[1.02] active:scale-100 transition-all flex items-center gap-3 shadow-glow disabled:opacity-20 border-2 border-brand/20"
                 >
-                  {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
-                  Save Recipe
+                  {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />} Deploy_Protocol
                 </button>
               </div>
 
-              <div className="flex-1 space-y-4">
-                <div className="grid grid-cols-12 gap-4 px-4 mb-2">
-                  <span className="col-span-7 text-[10px] font-black text-slate-400 uppercase tracking-widest">Ingredient</span>
-                  <span className="col-span-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Quantity</span>
-                  <span className="col-span-2"></span>
+              <div className="flex-1 overflow-y-auto no-scrollbar space-y-4 pr-2">
+                <div className="grid grid-cols-12 gap-6 px-8 mb-4">
+                  <span className="col-span-6 text-[10px] font-black text-text-muted uppercase tracking-[0.4em]">Resource_Node</span>
+                  <span className="col-span-3 text-[10px] font-black text-text-muted uppercase tracking-[0.4em]">Quantity</span>
+                  <span className="col-span-3 text-[10px] font-black text-text-muted uppercase tracking-[0.4em]">Protocol_Unit</span>
                 </div>
 
                 {recipeRows.map((row, index) => (
-                  <div key={index} className="grid grid-cols-12 gap-4 items-center animate-in slide-in-from-left duration-300">
-                    <div className="col-span-7">
-                      <select 
-                        value={row.ingredientId}
-                        onChange={(e) => updateRow(index, 'ingredientId', e.target.value)}
-                        className="w-full bg-slate-50 border-none rounded-xl p-4 text-sm font-bold focus:ring-2 focus:ring-blue-500/20"
-                      >
-                        <option value="">Select Ingredient</option>
-                        {ingredients.map(ing => (
-                          <option key={ing.id} value={ing.id}>{ing.name} ({ing.unit})</option>
-                        ))}
-                      </select>
+                  <div key={index} className="grid grid-cols-12 gap-4 items-center animate-in slide-in-from-right-4 duration-500" style={{ animationDelay: `${index * 50}ms` }}>
+                    <div className="col-span-6">
+                      <div className="relative group">
+                        <select 
+                          value={row.ingredientId}
+                          onChange={(e) => updateRow(index, 'ingredientId', e.target.value)}
+                          className="w-full bg-panel border-2 border-border-oftsy rounded-xl py-3 px-4 text-[10px] font-black uppercase outline-none focus:border-brand transition-all appearance-none"
+                        >
+                          <option value="">Select Resource...</option>
+                          {ingredients.map(ing => <option key={ing.id} value={ing.id}>{ing.name}</option>)}
+                        </select>
+                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" size={14} />
+                      </div>
                     </div>
-                    <div className="col-span-3 relative">
+                    <div className="col-span-3">
                       <input 
                         type="number" 
-                        value={row.quantity}
-                        onChange={(e) => updateRow(index, 'quantity', parseFloat(e.target.value))}
-                        className="w-full bg-slate-50 border-none rounded-xl p-4 text-sm font-black focus:ring-2 focus:ring-blue-500/20"
+                        value={row.quantity || ''}
+                        onChange={(e) => updateRow(index, 'quantity', e.target.value)}
+                        className="w-full bg-panel border-2 border-border-oftsy rounded-2xl p-6 text-sm font-black outline-none focus:border-brand transition-all text-center"
                         placeholder="0.00"
                       />
                     </div>
-                    <div className="col-span-2 flex justify-end">
-                      <button 
-                        onClick={() => removeRow(index)}
-                        className="p-4 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                      >
-                        <Trash2 size={18} />
+                    <div className="col-span-2">
+                       <div className="relative group">
+                        <select 
+                          value={row.unitId}
+                          onChange={(e) => updateRow(index, 'unitId', e.target.value)}
+                          className="w-full bg-panel border-2 border-border-oftsy rounded-2xl p-6 text-[11px] font-black uppercase outline-none focus:border-brand transition-all appearance-none"
+                        >
+                          <option value="">Unit...</option>
+                          {units.map(u => <option key={u.id} value={u.id}>{u.short}</option>)}
+                        </select>
+                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" size={14} />
+                      </div>
+                    </div>
+                    <div className="col-span-1 flex justify-end">
+                      <button onClick={() => setRecipeRows(recipeRows.filter((_, i) => i !== index))} className="p-4 bg-panel text-text-muted hover:text-red-500 border-2 border-border-oftsy hover:border-red-500 rounded-2xl transition-all">
+                        <Trash2 size={20} />
                       </button>
                     </div>
                   </div>
                 ))}
 
                 <button 
-                  onClick={addRow}
-                  className="w-full py-4 border-2 border-dashed border-slate-100 rounded-2xl text-slate-400 font-bold text-sm hover:border-blue-200 hover:text-blue-500 transition-all flex items-center justify-center gap-2 mt-6"
+                  onClick={() => setRecipeRows([...recipeRows, { ingredientId: '', quantity: 0, unitId: '' }])}
+                  className="w-full py-8 border-2 border-dashed border-border-oftsy rounded-[2.5rem] text-text-muted font-black uppercase text-[10px] tracking-[0.5em] hover:border-brand hover:text-brand hover:bg-brand/5 transition-all mt-10 flex items-center justify-center gap-4"
                 >
-                  <Plus size={18} /> Add Component
+                  <Plus size={24} /> Integrate_New_Resource_Stream
                 </button>
-              </div>
-
-              <div className="mt-10 p-6 bg-blue-50/50 rounded-3xl flex gap-4 border border-blue-100/50">
-                <Info className="text-blue-500 shrink-0" size={20} />
-                <p className="text-[11px] text-blue-800 font-medium leading-relaxed">
-                  <strong>How it works:</strong> When this product is sold in the POS, the system will automatically deduct these quantities from your warehouse stock. Ensure your units (kg vs grams) match your inventory settings.
-                </p>
               </div>
             </div>
           ) : (
-            <div className="bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200 h-[70vh] flex flex-col items-center justify-center text-center p-10">
-              <div className="p-6 bg-white rounded-[2rem] shadow-sm mb-6">
-                <Utensils size={40} className="text-slate-200" />
+            <div className="flex-1 bg-surface/20 rounded-[3.5rem] border-4 border-dashed border-border-oftsy flex flex-col items-center justify-center text-center p-12 backdrop-blur-sm">
+              <div className="w-32 h-32 bg-panel rounded-[3rem] flex items-center justify-center text-text-muted/20 mb-8">
+                <Utensils size={64} />
               </div>
-              <h3 className="text-xl font-black text-slate-400">SELECT A PRODUCT</h3>
-              <p className="text-slate-400 text-sm max-w-[250px] font-medium mt-2">Pick a product from the left to start building its secret recipe.</p>
+              <h3 className="text-3xl font-black text-text-muted/40 uppercase tracking-tighter italic">Awaiting_Catalog_Selection</h3>
+              <p className="text-[10px] font-black text-text-muted/30 uppercase tracking-[0.4em] mt-4">Select product node from shard to begin composition</p>
             </div>
           )}
         </div>
       </div>
+
+      {/* UNIT PROTOCOL MODAL */}
+      {isUnitModalOpen && (
+        <div className="fixed inset-0 bg-text-main/80 backdrop-blur-xl z-[100] flex items-center justify-center p-4">
+          <div className="bg-surface w-full max-w-xl rounded-[4rem] shadow-glow overflow-hidden p-12 border-2 border-brand/20 relative">
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-brand/10 blur-3xl" />
+            <div className="flex justify-between items-center mb-10">
+              <div>
+                <h3 className="text-3xl font-black text-text-main uppercase tracking-tighter italic leading-none">Units_Library.dll</h3>
+                <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] mt-3">Measurement Meta Data</p>
+              </div>
+              <button 
+                onClick={() => setIsUnitModalOpen(false)}
+                className="p-4 bg-panel border-2 border-border-oftsy rounded-2xl text-text-muted hover:text-brand transition-all"
+              ><X size={24}/></button>
+            </div>
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.4em] ml-2">Protocol_Name</label>
+                <input placeholder="Gram / Litre / Unit" value={newUnit.name} onChange={(e) => setNewUnit({...newUnit, name: e.target.value})} className="w-full bg-panel border-2 border-border-oftsy rounded-3xl p-6 text-xs font-black uppercase outline-none focus:border-brand transition-all" />
+              </div>
+              <div className="space-y-3">
+                <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.4em] ml-2">Short_Pointer</label>
+                <input placeholder="gm / ltr / qty" value={newUnit.short} onChange={(e) => setNewUnit({...newUnit, short: e.target.value})} className="w-full bg-panel border-2 border-border-oftsy rounded-3xl p-6 text-xs font-black uppercase outline-none focus:border-brand transition-all" />
+              </div>
+              <button onClick={() => {
+                if (!newUnit.name || !newUnit.short) return toast.error("Memory Allocation Fail");
+                axios.post(`${API_URL}/units`, newUnit).then(res => {
+                  setUnits([...units, res.data]);
+                  setNewUnit({ name: '', short: '' });
+                  toast.success("Memory Written");
+                });
+              }} className="w-full py-7 bg-brand text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.4em] shadow-glow border-2 border-brand/20 mt-4">Compile_New_Protocol</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
