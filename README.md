@@ -6,7 +6,7 @@
 
 **Frosted** is a professional-grade Enterprise Resource Planning (ERP) suite and Point of Sale (POS) system specifically architected for high-volume creameries and bakeries. Designed with a premium aesthetic, Frosted prioritizes high-speed operational workflows, hardware-accurate thermal printing, and zero-latency state management.
 
-![Dashboard]([https://example.com/image.png](https://res.cloudinary.com/dyp1ylpbc/image/upload/v1777463332/Screenshot_2026-04-25_182017_rdpq3h.png))
+![Dashboard](https://res.cloudinary.com/dyp1ylpbc/image/upload/v1777463332/Screenshot_2026-04-25_182017_rdpq3h.png)
 
 ---
 
