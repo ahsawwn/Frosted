@@ -6,6 +6,8 @@
 
 **Frosted** is a professional-grade Enterprise Resource Planning (ERP) suite and Point of Sale (POS) system specifically architected for high-volume creameries and bakeries. Designed with a premium aesthetic, Frosted prioritizes high-speed operational workflows, hardware-accurate thermal printing, and zero-latency state management.
 
+![Dashboard]([https://example.com/image.png](https://res.cloudinary.com/dyp1ylpbc/image/upload/v1777463332/Screenshot_2026-04-25_182017_rdpq3h.png))
+
 ---
 
 ## 🌐 Live Deployment
@@ -62,8 +64,8 @@ Frosted/
 **Frosted** is engineered for excellence. For inquiries regarding custom deployments, enterprise licensing, or technical support, please contact:
 
 *   **Developer:** [ahsawwn](https://github.com/ahsawwn)
-*   **Email:** [support@ahsawwn.com](mailto:support@ahsawwn.com)
+*   **Email:** [me@ahsawwn.com](mailto:me@ahsawwn.com)
 *   **Website:** [ahsawwn.com](https://ahsawwn.com)
 
 ---
-**©** 2026 Frosted (SMC-Private) Limited. Built with passion for the bakery industry. 🚀🏁🧤
+**©** 2026 Oftsy (SMC-Private) Limited. Built with passion for the bakery industry. 🚀🏁🧤
