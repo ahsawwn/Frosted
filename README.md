@@ -1,118 +1,37 @@
 # Frosted | Intelligent ERP & POS Ecosystem 🍦🍰
 
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS_v4-Oxygen_Engine-38bdf8?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
-[![React](https://img.shields.io/badge/React_18-TypeScript-61dafb?style=for-the-badge&logo=react)](https://reactjs.org/)
-[![Optimization](https://img.shields.io/badge/Layout-1080p_Optimized-db2777?style=for-the-badge)](https://github.com/Ahsawn)
+[![React](https://img.shields.io/badge/React_19-TypeScript-61dafb?style=for-the-badge&logo=react)](https://reactjs.org/)
+[![Deployment](https://img.shields.io/badge/Live_Demo-Frosted_Cloud-db2777?style=for-the-badge)](https://frosted.ahsawwn.com)
 
-**Frosted** is a professional-grade Enterprise Resource Planning (ERP) suite and Point of Sale (POS) system specifically architected for high-volume creameries and bakeries. Designed with a **Neo-Brutalist** aesthetic, Frosted prioritizes high-speed operational workflows, hardware-accurate thermal printing, and zero-latency state management.
-
----
-
-## 🏗 Engineering Excellence
-
-### 1. Zero-Latency Design System (Oxygen Engine)
-Frosted utilizes a **CSS-first variable architecture** powered by **Tailwind CSS v4**. This allows the entire enterprise suite to undergo a complete visual identity shift without expensive React re-renders.
-* **Classic Frosted:** The signature Pink/White high-contrast identity.
-* **Midnight Glaze:** A premium, low-light Dark/Gold aesthetic for high-end retail.
-* **Emerald Mint:** Focused on stability and financial oversight.
-* **Arctic Blue:** A calm, SaaS-standard workspace for corporate administration.
-* **Terminal Night:** A deep navy high-contrast mode for late-night inventory management.
-
-### 2. Viewport-Locked "Kiosk" Architecture
-Engineered specifically for **1920x1080** touch-terminals, Frosted eliminates browser-native scrolling in favor of a dedicated viewport management strategy:
-* **Smart Navigation:** A toggle-capable bottom navigation bar that slides to maximize operational real estate.
-* **Touch-Optimized Targets:** Oversized interactive elements designed for fast-paced, high-pressure environments.
-* **Zero-Scroll Modules:** Every core interface (POS, Stock, Finance) fits precisely within a 1080p frame to keep all mission-critical data visible.
-
-### 3. Hardware-Accurate Thermal Printing
-Unlike standard web printing, Frosted includes a specialized **Thermal Graphics Engine**:
-* **Thermal Rasterization:** Custom CSS `@media print` rules designed for 80mm hardware.
-* **Fiscal Logic Integration:** Automated GST mapping (5% for Card / 15% for Cash) embedded into the print stream.
-* **Audit Protection:** Native "DUPLICATE" watermarking logic for reprinted historical logs to ensure fiscal compliance.
+**Frosted** is a professional-grade Enterprise Resource Planning (ERP) suite and Point of Sale (POS) system specifically architected for high-volume creameries and bakeries. Designed with a premium aesthetic, Frosted prioritizes high-speed operational workflows, hardware-accurate thermal printing, and zero-latency state management.
 
 ---
 
-## 🗺 System Modules & Orchestration
-
-Frosted is divided into specialized operational nodes, each engineered for a specific role within the enterprise.
-
-### **1. Management Intelligence (Dashboard)**
-The nerve center of the ecosystem, providing real-time telemetry into store health.
-* **Metric Pulses:** Instant visibility into Sales Today, Order Volume, and Stock Alerts.
-* **Stream Analytics:** A live terminal feed of the latest transactions.
-* **Role-Awareness:** Automatically filters KPIs based on whether an Admin, Manager, or Chef is logged in.
-
-### **2. Sales Terminal (POS)**
-A high-velocity transaction interface built for zero-latency checkout.
-* **Atomic Cart:** Sub-100ms calculation of taxes, discounts, and custom modifiers.
-* **Fiscal Logic:** Intelligent tax mapping (5% Card / 15% Cash) based on payment terminal selection.
-* **Voucher Integration:** One-click redemption of marketing coupons and loyalty vouchers.
-
-### **3. Kitchen Display (KDS)**
-Digital order orchestration that replaces volatile paper tickets.
-* **Status Lifecycle:** High-contrast tracking through `PENDING`, `PREPARING`, and `READY` phases.
-* **Lead Time Logic:** Displays preparation requirements to help chefs prioritize bottleneck items.
-* **Phase Mutation:** Simple, touch-optimized "Next Phase" controls for fast-paced kitchen work.
-
-### **4. Warehouse & Logistics (Inventory)**
-Real-time monitoring of raw materials and bakery essentials.
-* **Threshold Alerts:** Visual pulse animations for items falling below safety stock levels.
-* **Movement History:** Historical logs of every stock addition or deduction.
-* **Inventory Pulse:** Quick-glance indicators of overall warehouse health.
-
-### **5. Production Logic (Recipes/BOM)**
-The Bill of Materials (BOM) engine that links products to their raw ingredients.
-* **Composition Protocol:** Define exactly how much milk, sugar, or flour goes into every scoop or cake.
-* **Multi-Unit Scaling:** Automated conversion between bulk (Kgs/Ltrs) and production units (Gms/Mls).
-* **Costing Awareness:** Pre-calculates production requirements for high-volume orders.
-
-### **6. Catalog & Merchandising (Products)**
-A centralized repository for all items sold at the front counter.
-* **Categorization:** Logical grouping (e.g., Ice Creams, Toppings, Beverages) for fast POS navigation.
-* **Identity Provisioning:** Manage pricing, imagery, and category assignments from a single terminal.
-* **Prep-Time Metadata:** Set specific lead times for every product to feed the KDS engine.
-
-### **7. Fiscal Audit (Transactions)**
-Comprehensive historical ledger for financial transparency.
-* **Legacy Search:** Instantly locate orders by ID or date for refunds and disputes.
-* **Thermal Reprinting:** Generate "DUPLICATE" watermarked receipts for historical orders.
-* **Status Audit:** Track the final financial and fulfillment status of every transaction.
-
-### **8. Customer Relations (CRM)**
-Identity management and loyalty orchestration.
-* **Loyalty Ledger:** Track point balances and reward thresholds for every customer.
-* **Identity Shard:** Maintain contact details and purchase history for personalized service.
-* **Walk-In Support:** Seamless handling of anonymous transactions without data overhead.
-
-### **9. Personnel & Access (Staff)**
-Human Resource management with hardware-level security.
-* **Role Provisioning:** Assign staff to `SUPERADMIN`, `ADMIN`, `CASHIER`, or `KITCHEN` tiers.
-* **Access Control:** Enforce UI-level filtering to prevent unauthorized data access.
-* **Operator Pulse:** View currently active staff nodes on the secure terminal.
-
-### **10. Marketing Hub (Coupons)**
-Dynamic campaign management for store promotions.
-* **Rule Engine:** Set expiry dates, usage limits, and minimum order requirements.
-* **Redemption Tracking:** See exactly how many times a voucher has been used in production.
-
-### **11. System Engine (Settings)**
-Global configuration and branding controls.
-* **Receipt Customization:** Live preview of thermal fonts, sizes, and branding headers.
-* **Theme Identity:** Instantly swap the entire UI between 5 professional color skins.
-* **Hardware Toggles:** Activate "Kiosk Mode" or "Auto-Print" protocols for specific terminals.
+## 🌐 Live Deployment
+**Production URL:** [https://frosted.ahsawwn.com](https://frosted.ahsawwn.com)
 
 ---
 
-## 💻 Tech Stack & Pattern Design
+## 🏗 Enterprise Architecture (Dual-Engine Strategy)
 
-| Layer | Technology / Pattern |
-| :--- | :--- |
-| **Frontend** | React 18, TypeScript (Strict Mode) |
-| **Database** | Prisma ORM, PostgreSQL (Singleton Logic) |
-| **Styling** | Tailwind CSS v4 (Oxygen Engine) |
-| **State** | Context API (Themes/Auth), LocalStorage (Persistence) |
-| **API** | Express.js REST Framework |
-| **Printing** | Specialized Thermal Rasterization (72mm) |
+Frosted uses a specialized dual-backend architecture to ensure both development speed and production stability on shared hosting environments:
+
+### 1. Development Engine (`/server`)
+* **Technology:** Prisma ORM + PostgreSQL.
+* **Purpose:** Rapid feature iteration and schema management.
+* **Best for:** Local development and high-resource dedicated servers.
+
+### 2. Production Engine (`/server-prod`)
+* **Technology:** Raw SQL (`pg`) + Neon Serverless (WebSockets).
+* **Architecture:** Completely Prisma-free to reduce memory overhead.
+* **Purpose:** Optimized for Shared Hosting (cPanel/Spaceship) where port 5432 is often blocked.
+* **Connectivity:** Uses the Neon Serverless driver to tunnel database queries over HTTPS (Port 443).
+
+### 3. Frontend Terminal (`/client`)
+* **Technology:** React 19 + Vite + Tailwind CSS v4.
+* **Design System:** Oxygen Engine (CSS-variable driven for instant theme swapping).
+* **Optimization:** 1080p Viewport-locked for dedicated Kiosk terminals.
 
 ---
 
@@ -120,29 +39,31 @@ Global configuration and branding controls.
 
 ```text
 Frosted/
-├── src/
-│   ├── components/   # Atomic UI & Receipt Templates
-│   ├── pages/        # Business Logic Shards (POS, KDS, HR)
-│   ├── routes/       # API Gateway & Backend Logic
-│   ├── lib/          # Prisma & Database Connectors
-│   └── styles/       # Tailwind Design Tokens
+├── client/           # React 19 Frontend (Vite)
+├── server/           # Development Backend (Prisma + PostgreSQL)
+├── server-prod/      # Production Backend (Raw SQL + Neon Serverless)
+└── _legacy/          # Archived codebase versions
 ```
 
 ---
 
-## 🛡 Security & Reliability
+## 🗺 System Modules
 
-* **Session Persistence:** State is synchronized with `localStorage` and Backend DB to ensure zero data loss during power fluctuations.
-* **Input Sanitization:** All fiscal and inventory inputs are strictly parsed at the schema level.
-* **Thermal Accuracy:** CSS-first print strategy ensures perfect scaling on 72mm hardware without driver overhead.
-
----
-
-## 🎓 The Developer
-
-**Frosted** was engineered by **ahsawwn**, Founder of **Oftsy Systems**.
-
-I am a Full-Stack Developer and Entrepreneur dedicated to building high-performance, business-centric software solutions that bridge the gap between complex data and intuitive design.
+*   **Sales Terminal (POS):** High-velocity transaction interface with intelligent tax mapping (5% Card / 15% Cash).
+*   **Kitchen Display (KDS):** Digital order orchestration with real-time status tracking (`PENDING` → `READY`).
+*   **Inventory Pulse:** Real-time stock monitoring with visual threshold alerts.
+*   **Production Logic (Recipes):** Automated Bill of Materials (BOM) linking products to raw ingredients.
+*   **Customer Display:** Synchronized secondary display for customer order verification.
 
 ---
-**©** 2026 Frosted (SMC-Private) Limited. Built by **ahsawwn**. 🚀🏁🧤
+
+## 🎓 Contact & Support
+
+**Frosted** is engineered for excellence. For inquiries regarding custom deployments, enterprise licensing, or technical support, please contact:
+
+*   **Developer:** [ahsawwn](https://github.com/ahsawwn)
+*   **Email:** [support@ahsawwn.com](mailto:support@ahsawwn.com)
+*   **Website:** [ahsawwn.com](https://ahsawwn.com)
+
+---
+**©** 2026 Frosted (SMC-Private) Limited. Built with passion for the bakery industry. 🚀🏁🧤
